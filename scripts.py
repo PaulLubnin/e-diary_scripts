@@ -3,14 +3,14 @@ import random
 from datacenter.models import (Schoolkid, Mark, Chastisement, Lesson, Commendation)
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
-childs_name, childs_id = ['Фролов Иван', 'Голубев Феофан'], [6551, 6548]
-
-child = Schoolkid.objects.filter(full_name__contains='Фролов Иван')
-bad_marks = Mark.objects.filter(schoolkid=child[0], points__lte=3)
-
-last_lessons = Lesson.objects.filter(year_of_study=child[0].year_of_study,
-                                     group_letter=child[0].group_letter,
-                                     subject__title='Математика').order_by('-date').first()
+praises = ['Молодец!', 'Отлично!', 'Хорошо!', 'Гораздо лучше, чем я ожидал!', 'Ты меня приятно удивил!', 'Великолепно!',
+           'Прекрасно!', 'Ты меня очень обрадовал!', 'Именно этого я давно ждал от тебя!',
+           'Сказано здорово – просто и ясно!', 'Ты, как всегда, точен!', 'Очень хороший ответ!', 'Талантливо!',
+           'Ты сегодня прыгнул выше головы!', 'Я поражен!', 'Уже существенно лучше!', 'Потрясающе!', 'Замечательно!',
+           'Прекрасное начало!', 'Так держать!', 'Ты на верном пути!', 'Здорово!', 'Это как раз то, что нужно!',
+           'Я тобой горжусь!', 'С каждым разом у тебя получается всё лучше!', 'Мы с тобой не зря поработали!',
+           'Я вижу, как ты стараешься!', 'Ты растешь над собой!', 'Ты многое сделал, я это вижу!',
+           'Теперь у тебя точно все получится!', ]
 
 
 def search_schoolkid(name: str):
@@ -23,18 +23,19 @@ def search_schoolkid(name: str):
 
 def create_commendation(schoolkid: Schoolkid, subject: str):
     """Функция для создания похвалы по последнему заданному уроку."""
-    with open('praises.txt', 'r', encoding='utf8') as file:
-        praise_list = file.readlines()
-        praise = random.choice([praise.strip().split('. ')[1] for praise in praise_list])
+    praise = random.choice(praises)
     lesson = Lesson.objects.filter(year_of_study=schoolkid.year_of_study,
                                    group_letter=schoolkid.group_letter,
                                    subject__title=f'{subject}').order_by('-date').first()
-    Commendation.objects.create(schoolkid=schoolkid,
-                                text=praise,
-                                created=lesson.date,
-                                subject=lesson.subject,
-                                teacher=lesson.teacher)
-    print('Похвала создана.')
+    try:
+        Commendation.objects.create(schoolkid=schoolkid,
+                                    text=praise,
+                                    created=lesson.date,
+                                    subject=lesson.subject,
+                                    teacher=lesson.teacher)
+        print('Похвала создана.')
+    except AttributeError:
+        print('Урок указан не правильно')
 
 
 def remove_chastisements(schoolkid: Schoolkid):
@@ -54,10 +55,14 @@ def fix_marks(schoolkid: Schoolkid):
     print('Оценки исправлены.')
 
 
+# поиск ученика
 child = search_schoolkid('Фролов Иван')
 
+# исправление оценок
 fix_marks(child)
-remove_chastisements(child)
-create_commendation(child, 'Математика')
 
-bad_marks.count()
+# удаление замечаний
+remove_chastisements(child)
+
+# создание похвалы
+create_commendation(child, 'Математика')
