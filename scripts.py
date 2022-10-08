@@ -41,17 +41,14 @@ def create_commendation(schoolkid: Schoolkid, subject: str):
 def remove_chastisements(schoolkid: Schoolkid):
     """Функция удаляет все замечания."""
     notes = Chastisement.objects.filter(schoolkid_id=schoolkid.pk)
-    for note in notes:
-        note.delete()
+    notes.delete()
     print('Замечания удалены.')
 
 
 def fix_marks(schoolkid: Schoolkid):
     """Функция исправляет двойки и тройки на пятёрки"""
     bad_points = Mark.objects.filter(schoolkid_id=schoolkid.pk, points__lte=3)
-    for point in bad_points:
-        point.points = 5
-        point.save()
+    bad_points.update(points=5)
     print('Оценки исправлены.')
 
 
